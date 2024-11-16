@@ -71,9 +71,10 @@ int fatorBalanc(Estrutura *no) {
 
 int validarCPF(unsigned long long cpf) {
 	int digitos = 0;
+	unsigned long long aux = cpf;
 	
-	while(cpf) {
-		cpf /= 10;
+	while(aux) {
+		aux /= 10;
 		digitos++;
 	}
 	
@@ -199,11 +200,40 @@ void update(Estrutura *raiz, unsigned long long cpf) {
 void read(Estrutura *raiz) {
 	if(raiz) {
 		read(raiz->esq);
-		printf("CPF: %llu\nNome: %s\nData de Nascimento: %s\nEndereço: %s\nTelefone: %s\n",
+		printf("CPF: %llu\nNome: %s\nData de Nascimento: %s\nEndereço: %s\nTelefone: %s\n\n",
 				raiz->dado.cpf, raiz->dado.nome, raiz->dado.dataNasc,
 				raiz->dado.endereco, raiz->dado.telefone);
 		read(raiz->dir);
 	}
+}
+
+void exportarArquivo(Estrutura *raiz, FILE *arquivo) {
+	if(raiz) {
+		exportarArquivo(raiz->esq, arquivo);
+		fprintf(arquivo, "CPF: %llu\nNome: %s\nData de Nascimento: %s\nEndereço: %s\nTelefone: %s\n\n",
+				raiz->dado.cpf, raiz->dado.nome, raiz->dado.dataNasc,
+				raiz->dado.endereco, raiz->dado.telefone);
+		exportarArquivo(raiz->dir, arquivo);
+	}
+}
+
+void importarArquivo(const char *nomeArquivo, Estrutura **raiz) {
+	FILE *arquivo = fopen(nomeArquivo, "r");
+	
+	if(!arquivo) {
+		printf("Erro ao abril o arquivo %s.\n", nomeArquivo);
+		return;
+	}
+	
+	Registro registro;
+	
+	while(fscanf(arquivo, "CPF: %llu\nNome: %[^\n]\nData de Nascimento: %[^\n]\nEndereço: %[^\n]\nTelefone: %[^\n]\n\n",
+				&registro.cpf, &registro.nome, &registro.dataNasc,
+				&registro.endereco, &registro.telefone) == 5){
+		*raiz = inserir(*raiz, registro);
+	}
+	
+	fclose(arquivo);
 }
 
 int lerNumero() {
@@ -223,6 +253,8 @@ int main(void) {
 	
 	Estrutura *raiz = NULL;
 	int op;
+	
+	importarArquivo("registros.txt", &raiz);
 		
 	do {
 		system("cls");
@@ -232,6 +264,7 @@ int main(void) {
 		printf("3 - DELETAR REGISTRO\n");
 		printf("4 - ATUALIZAR REGISTRO\n");
 		printf("5 - LISTAR REGISTROS\n");
+		printf("6 - EXPORTAR REGISTROS PARA ARQUIVO\n");
 		printf("0 - SAIR\n\n");
 		printf("Digite a opção desejada: ");
 		op = lerNumero();
@@ -263,7 +296,7 @@ int main(void) {
 				
 				printf("Digite o CPF para buscar: ");
 				while (getchar() != '\n');
-				scanf("&llu", &cpf);
+				scanf("%llu", &cpf);
 				
 				Estrutura *no = busca(raiz, cpf);
 				
@@ -275,7 +308,7 @@ int main(void) {
 			        printf("Endereço: %s\n", no->dado.endereco);
 			        printf("Telefone: %s\n", no->dado.telefone);
 				}else {
-					printf("\nCPF %llu não encontrado!\n", cpf);
+					printf("\nRegistro de CPF %llu não encontrado!\n", cpf);
 				}
 				break;
 			}
@@ -298,9 +331,21 @@ int main(void) {
 				break;
 			}
 			case 5:{
-				printf("Registros cadastrados:\n");
+				printf("Registros cadastrados:\n\n");
 				
 				read(raiz);
+				break;
+			}
+			case 6:{
+				FILE *arquivo = fopen("registros.txt", "w");
+				
+				if(arquivo) {
+					exportarArquivo(raiz, arquivo);
+					fclose(arquivo);
+					printf("Registros exportados com sucesso!\n");
+				}else {
+					printf("Erro ao criar arquivo!\n");
+				}
 				break;
 			}
 			case 0:{
