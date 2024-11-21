@@ -237,25 +237,6 @@ void exportarArquivo(Estrutura *raiz, FILE *arquivo) {
 	}
 }
 
-void importarArquivo(const char *nomeArquivo, Estrutura **raiz) {
-	FILE *arquivo = fopen(nomeArquivo, "r");
-	
-	if(!arquivo) {
-		printf("Erro ao abril o arquivo %s.\n", nomeArquivo);
-		return;
-	}
-	
-	Registro registro;
-	
-	while(fscanf(arquivo, "CPF: %llu\nNome: %[^\n]\nData de Nascimento: %[^\n]\nEndereço: %[^\n]\nTelefone: %[^\n]\n\n",
-				&registro.cpf, &registro.nome, &registro.dataNasc,
-				&registro.endereco, &registro.telefone) == 5){
-		*raiz = inserir(*raiz, registro);
-	}
-	
-	fclose(arquivo);
-}
-
 int lerNumero() {
 	int num;
 	
@@ -273,8 +254,6 @@ int main(void) {
 	
 	Estrutura *raiz = NULL;
 	int op;
-	
-	importarArquivo("registros.txt", &raiz);
 		
 	do {
 		system("cls");
@@ -309,7 +288,7 @@ int main(void) {
 				scanf(" %[^\n]", novoRegistro.dataNasc);
 				printf("Digite o endereço: ");
 				scanf(" %[^\n]", novoRegistro.endereco);
-				printf("Digite o telefone: ");
+				printf("Digite o telefone ((xx) x xxxx-xxxx): ");
 				scanf(" %[^\n]", novoRegistro.telefone);
 				
 				raiz = inserir(raiz, novoRegistro);
