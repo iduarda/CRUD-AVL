@@ -165,6 +165,7 @@ Estrutura *remover(Estrutura *raiz, unsigned long long cpf) {
 			}
 			
 			free(aux);
+			printf("Registro com CPF %llu deletado com sucesso!\n", cpf);
 		} else {
 			Estrutura *aux = menor(raiz->dir);
 			raiz->dado = aux->dado;
@@ -200,7 +201,7 @@ void update(Estrutura *raiz, unsigned long long cpf) {
 		scanf(" %[^\n]", no->dado.dataNasc);
 		printf("Digite o novo endereço: ");
 		scanf(" %[^\n]", no->dado.endereco);
-		printf("Digite o novo telefone: ");
+		printf("Digite o telefone ((xx) x xxxx-xxxx): ");
 		scanf(" %[^\n]", no->dado.telefone);
 	} else {
 		printf("CPF %llu não encontrado!\n", cpf);
