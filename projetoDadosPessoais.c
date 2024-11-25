@@ -18,7 +18,7 @@ typedef struct Estrutura {
 	struct Estrutura *dir;
 } Estrutura;
 
-int calculaAltura(Estrutura *no){
+int calculaAltura(Estrutura *no) {
 	int alturaDir = 0;
 	int alturaEsq = 0;
 	
@@ -47,7 +47,7 @@ Estrutura *rotacaoEsq(Estrutura *antigaRaiz) {
 	Estrutura *novaRaiz = antigaRaiz->dir;
 	Estrutura *aux = novaRaiz->esq;
 	novaRaiz->esq = antigaRaiz;
-	antigaRaiz->esq = aux;
+	antigaRaiz->dir = aux;
 	
 	return novaRaiz;
 }
@@ -69,6 +69,28 @@ int fatorBalanc(Estrutura *no) {
 	return no ? calculaAltura(no->esq) - calculaAltura(no->dir) : 0;
 }
 
+int validarCPF(const char *cpfS) {
+	int i;
+	if(strlen(cpfS) != 11)
+		return 0;
+	
+	for(i = 0; i < 11; i++) {
+		if(cpfS[i] < '0' || cpfS[i] > '9')
+			return 0;
+	}
+	
+	return 1;
+}
+
+void formatarCPF(unsigned long long cpf, char *cpfFormatado) {
+	char cpfS[12];
+	snprintf(cpfS, sizeof(cpfS), "%011llu", cpf);
+	
+	snprintf(cpfFormatado, 15, "%c%c%c.%c%c%c.%c%c%c-%c%c",
+             cpfS[0], cpfS[1], cpfS[2], cpfS[3], cpfS[4], cpfS[5],
+             cpfS[6], cpfS[7], cpfS[8], cpfS[9], cpfS[10]);
+}
+
 Estrutura *inserir(Estrutura *raiz, Registro dado) {
 	if(!raiz) {
 		raiz = (Estrutura *)malloc(sizeof(Estrutura));
@@ -76,7 +98,7 @@ Estrutura *inserir(Estrutura *raiz, Registro dado) {
 		raiz->altura = 0;
 		raiz->esq = NULL;
 		raiz->dir = NULL;
-	} else if(dado.cpf < raiz->dado.cpf) {
+	}else if(dado.cpf < raiz->dado.cpf) {
 		raiz->esq = inserir(raiz->esq, dado);
 		
 		if(fatorBalanc(raiz) == 2) {
@@ -85,7 +107,7 @@ Estrutura *inserir(Estrutura *raiz, Registro dado) {
 			else
 				raiz = rotacaoDuplaDir(raiz);
 		}
-	} else if(dado.cpf > raiz->dado.cpf) {
+	}else if(dado.cpf > raiz->dado.cpf) {
 		raiz->dir = inserir(raiz->dir, dado);
 		if(fatorBalanc(raiz) == -2) {
 			if(dado.cpf > raiz->dir->dado.cpf)
@@ -93,8 +115,9 @@ Estrutura *inserir(Estrutura *raiz, Registro dado) {
 			else
 				raiz = rotacaoDuplaDir(raiz);
 		}
-	} else
-		printf("ERRO! CPF j· existe!");
+	}else {
+		printf("ERRO! O CPF %llu j√° existe!\n", dado.cpf);
+	}
 	
 	raiz->altura = calculaAltura(raiz);
 	
@@ -104,6 +127,7 @@ Estrutura *inserir(Estrutura *raiz, Registro dado) {
 Estrutura *busca(Estrutura *raiz, unsigned long long cpf) {
 	if(!raiz)
 		return NULL;
+		
 	if(cpf < raiz->dado.cpf)
 		return busca(raiz->esq, cpf);
 	else if(cpf > raiz->dado.cpf)
@@ -121,7 +145,7 @@ Estrutura *menor(Estrutura *no) {
 
 Estrutura *remover(Estrutura *raiz, unsigned long long cpf) {
 	if(!raiz) {
-		printf("CPF n„o escontrado!");
+		printf("CPF %llu n√£o encontrado!\n", cpf);
 	
 		return NULL;
 	}
@@ -141,6 +165,7 @@ Estrutura *remover(Estrutura *raiz, unsigned long long cpf) {
 			}
 			
 			free(aux);
+			printf("Registro com CPF %llu deletado com sucesso!\n", cpf);
 		} else {
 			Estrutura *aux = menor(raiz->dir);
 			raiz->dado = aux->dado;
@@ -174,24 +199,42 @@ void update(Estrutura *raiz, unsigned long long cpf) {
 		scanf(" %[^\n]", no->dado.nome);
 		printf("Digite a nova data de nascimento (dd/mm/yyyy): ");
 		scanf(" %[^\n]", no->dado.dataNasc);
-		printf("Digite o novo endereÁo: ");
+		printf("Digite o novo endere√ßo: ");
 		scanf(" %[^\n]", no->dado.endereco);
-		printf("Digite o novo telefone: ");
+		printf("Digite o telefone ((xx) x xxxx-xxxx): ");
 		scanf(" %[^\n]", no->dado.telefone);
 	} else {
-		printf("CPF n„o encontrado!\n");
+		printf("CPF %llu n√£o encontrado!\n", cpf);
 	}
 }
 
 void read(Estrutura *raiz) {
-	if (raiz) {
+	if(raiz) {
 		read(raiz->esq);
-		printf("CPF: %llu\n", raiz->dado.cpf);
-		printf("Nome: %s\n", raiz->dado.nome);
-		printf("Data de Nascimento: %s\n", raiz->dado.dataNasc);
-		printf("EndereÁo: %s\n", raiz->dado.endereco);
-		printf("Telefone: %s\n\n", raiz->dado.telefone);
+		
+		char cpfFormatado[15];
+		formatarCPF(raiz->dado.cpf, cpfFormatado);
+		
+		printf("CPF: %s\nNome: %s\nData de Nascimento: %s\nEndere√ßo: %s\nTelefone: %s\n\n",
+				cpfFormatado, raiz->dado.nome, raiz->dado.dataNasc,
+				raiz->dado.endereco, raiz->dado.telefone);
+				
 		read(raiz->dir);
+	}
+}
+
+void exportarArquivo(Estrutura *raiz, FILE *arquivo) {
+	if(raiz) {
+		exportarArquivo(raiz->esq, arquivo);
+		
+		char cpfFormatado[15];
+		formatarCPF(raiz->dado.cpf, cpfFormatado);
+				
+		fprintf(arquivo, "CPF: %s\nNome: %s\nData de Nascimento: %s\nEndere√ßo: %s\nTelefone: %s\n\n",
+				cpfFormatado, raiz->dado.nome, raiz->dado.dataNasc,
+				raiz->dado.endereco, raiz->dado.telefone);
+				
+		exportarArquivo(raiz->dir, arquivo);
 	}
 }
 
@@ -199,7 +242,7 @@ int lerNumero() {
 	int num;
 	
 	while (scanf("%d", &num) != 1) {
-		printf("\n OpÁ„o Inv·lida! Digite um n˙mero: \n");
+		printf("\nOp√ß√£o Inv√°lida! Digite um n√∫mero: \n");
 		
 		while(getchar() != '\n');
 	}
@@ -221,43 +264,109 @@ int main(void) {
 		printf("3 - DELETAR REGISTRO\n");
 		printf("4 - ATUALIZAR REGISTRO\n");
 		printf("5 - LISTAR REGISTROS\n");
+		printf("6 - EXPORTAR REGISTROS PARA ARQUIVO\n");
 		printf("0 - SAIR\n\n");
-		printf("Digite a opÁ„o desejada: ");
+		printf("Digite a op√ß√£o desejada: ");
 		op = lerNumero();
 		
 		switch(op) {
 			case 1:{
-				printf("Inserir registro\n");
+				Registro novoRegistro;
+				char cpfS[12];
+				
+				printf("Digite o CPF: ");
+				scanf("%11s", cpfS);
+				if(!validarCPF(cpfS)) {
+					printf("CPF inv√°lido!\n");
+					break;
+				}
+				
+				novoRegistro.cpf = strtoull(cpfS, NULL, 10);
+				
+				printf("Digite o nome: ");
+				scanf(" %[^\n]", novoRegistro.nome);
+				printf("Digite a data de nascimento (dd/mm/yyyy): ");
+				scanf(" %[^\n]", novoRegistro.dataNasc);
+				printf("Digite o endere√ßo: ");
+				scanf(" %[^\n]", novoRegistro.endereco);
+				printf("Digite o telefone ((xx) x xxxx-xxxx): ");
+				scanf(" %[^\n]", novoRegistro.telefone);
+				
+				raiz = inserir(raiz, novoRegistro);
 				break;
 			}
 			case 2:{
-				printf("Buscar registro\n");
+				unsigned long long cpf;
+				
+				printf("Digite o CPF para buscar: ");
+				while (getchar() != '\n');
+				scanf("%llu", &cpf);
+				
+				Estrutura *no = busca(raiz, cpf);
+				
+				if(no) {
+					char cpfFormatado[15];
+					formatarCPF(no->dado.cpf, cpfFormatado);
+					
+					printf("\nRegistro encontrado:\n");
+			        printf("CPF: %s\n", cpfFormatado);
+			        printf("Nome: %s\n", no->dado.nome);
+			        printf("Data de Nascimento: %s\n", no->dado.dataNasc);
+			        printf("Endere√ßo: %s\n", no->dado.endereco);
+			        printf("Telefone: %s\n", no->dado.telefone);
+				}else {
+					printf("\nRegistro de CPF %llu n√£o encontrado!\n", cpf);
+				}
 				break;
 			}
 			case 3:{
-				printf("Deletar registro\n");
+				unsigned long long cpf;
+				
+				printf("Digite o CPF para deletar: ");
+				scanf("%llu", &cpf);
+				
+				raiz = remover(raiz, cpf);
 				break;
 			}
 			case 4:{
-				printf("Atualizar registro\n");
+				unsigned long long cpf;
+				
+				printf("Digite o CPF para atualizar: ");
+				scanf("%llu", &cpf);
+				
+				update(raiz, cpf);
 				break;
 			}
 			case 5:{
-				printf("Listar registros\n");
+				printf("Registros cadastrados:\n\n");
+				
+				read(raiz);
+				break;
+			}
+			case 6:{
+				FILE *arquivo = fopen("registros.txt", "w");
+				
+				if(arquivo) {
+					exportarArquivo(raiz, arquivo);
+					fclose(arquivo);
+					printf("Registros exportados com sucesso!\n");
+				}else {
+					printf("Erro ao criar arquivo!\n");
+				}
 				break;
 			}
 			case 0:{
-				printf("Sair\n");
+				printf("Saindo...\n");
 				break;
 			}
 			default:{
-				printf("Inv·lido!\n");
+				printf("Op√ß√£o inv√°lida!\n");
 				break;
 			}
 		}
 		
 		if(op!=0) {
-			printf("\n Digite '1' para voltar ao menu ou '0' para encerrar o programa.\n ");
+			printf("\nDigite '1' para voltar ao menu ou '0' para encerrar o programa.\n ");
 			op = lerNumero();
 		}
 		
