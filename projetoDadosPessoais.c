@@ -3,6 +3,7 @@
 #include <string.h>
 #include <locale.h>
 
+// Estrutura para armazenar os dados de um registro
 typedef struct Registro {
 	unsigned long long cpf;
 	char nome[100];
@@ -11,6 +12,7 @@ typedef struct Registro {
 	char telefone[15];
 } Registro;
 
+// Estrutura para representar um nó da árvore AVL
 typedef struct Estrutura {
 	Registro dado;
 	int altura;
@@ -18,6 +20,7 @@ typedef struct Estrutura {
 	struct Estrutura *dir;
 } Estrutura;
 
+// Função para calcular a altura de um nó
 int calculaAltura(Estrutura *no) {
 	int alturaDir = 0;
 	int alturaEsq = 0;
@@ -34,6 +37,7 @@ int calculaAltura(Estrutura *no) {
 	return (alturaEsq > alturaDir)?(alturaEsq):(alturaDir);
 }
 
+// Função para fazer uma rotação simples à direita
 Estrutura *rotacaoDir(Estrutura *antigaRaiz) {
 	Estrutura *novaRaiz = antigaRaiz->esq;
 	Estrutura *aux = novaRaiz->dir;
@@ -43,6 +47,7 @@ Estrutura *rotacaoDir(Estrutura *antigaRaiz) {
 	return novaRaiz;
 }
 
+// Função para fazer uma rotação simples à esquerda
 Estrutura *rotacaoEsq(Estrutura *antigaRaiz) {
 	Estrutura *novaRaiz = antigaRaiz->dir;
 	Estrutura *aux = novaRaiz->esq;
@@ -52,23 +57,27 @@ Estrutura *rotacaoEsq(Estrutura *antigaRaiz) {
 	return novaRaiz;
 }
 
+// Função para fazer uma rotação dubla à direita: rotação esquerda no filho esquerdo e rotação direita na raiz
 Estrutura *rotacaoDuplaDir(Estrutura *antigaRaiz) {
 	antigaRaiz->esq = rotacaoEsq(antigaRaiz->esq);
 	
 	return rotacaoDir(antigaRaiz);
 }
 
+// Função para fazer uma rotação dubla à esquerda: rotação direita no filho direito e rotação esquerda na raiz
 Estrutura *rotacaoDuplaEsq(Estrutura *antigaRaiz) {
 	antigaRaiz->dir = rotacaoDir(antigaRaiz->dir);
 	
 	return rotacaoEsq(antigaRaiz);
 }
 
+// Função para calcular o fator de balanceamento de um nó
 int fatorBalanc(Estrutura *no) {
 	
 	return no ? calculaAltura(no->esq) - calculaAltura(no->dir) : 0;
 }
 
+// Função para validar um CPF
 int validarCPF(const char *cpfS) {
 	int i;
 	if(strlen(cpfS) != 11)
@@ -82,6 +91,7 @@ int validarCPF(const char *cpfS) {
 	return 1;
 }
 
+// Função para formatar um CPF para o formato XXX.XXX.XXX-XX
 void formatarCPF(unsigned long long cpf, char *cpfFormatado) {
 	char cpfS[12];
 	snprintf(cpfS, sizeof(cpfS), "%011llu", cpf);
@@ -91,6 +101,7 @@ void formatarCPF(unsigned long long cpf, char *cpfFormatado) {
              cpfS[6], cpfS[7], cpfS[8], cpfS[9], cpfS[10]);
 }
 
+// Função para inserir um registro na árvore AVL
 Estrutura *inserir(Estrutura *raiz, Registro dado) {
 	if(!raiz) {
 		raiz = (Estrutura *)malloc(sizeof(Estrutura));
@@ -124,6 +135,7 @@ Estrutura *inserir(Estrutura *raiz, Registro dado) {
 	return raiz;
 }
 
+//Função para buscar um registro pelo CPF
 Estrutura *busca(Estrutura *raiz, unsigned long long cpf) {
 	if(!raiz)
 		return NULL;
@@ -136,6 +148,7 @@ Estrutura *busca(Estrutura *raiz, unsigned long long cpf) {
 		return raiz;
 }
 
+// Função para encontrar o menor nó da árvore
 Estrutura *menor(Estrutura *no) {
 	while (no->esq)
 		no = no->esq;
@@ -143,6 +156,7 @@ Estrutura *menor(Estrutura *no) {
 	return no;
 }
 
+// Função para remover um registro pelo CPF
 Estrutura *remover(Estrutura *raiz, unsigned long long cpf) {
 	if(!raiz) {
 		printf("CPF %llu não encontrado!\n", cpf);
@@ -191,6 +205,7 @@ Estrutura *remover(Estrutura *raiz, unsigned long long cpf) {
 	return raiz;
 }
 
+// Função para atualizar os dados de um registro
 void update(Estrutura *raiz, unsigned long long cpf) {
 	Estrutura *no = busca(raiz, cpf);
 	
@@ -208,6 +223,7 @@ void update(Estrutura *raiz, unsigned long long cpf) {
 	}
 }
 
+// Função para exibir os registros em ordem crescente através do CPF
 void read(Estrutura *raiz) {
 	if(raiz) {
 		read(raiz->esq);
@@ -223,6 +239,7 @@ void read(Estrutura *raiz) {
 	}
 }
 
+// Função para exportar os registros para um arquivo txt em ordem crescente
 void exportarArquivo(Estrutura *raiz, FILE *arquivo) {
 	if(raiz) {
 		exportarArquivo(raiz->esq, arquivo);
@@ -238,6 +255,7 @@ void exportarArquivo(Estrutura *raiz, FILE *arquivo) {
 	}
 }
 
+// Função para verificar se o usuário digitou um número válido
 int lerNumero() {
 	int num;
 	
@@ -250,6 +268,7 @@ int lerNumero() {
 	return num;
 }
 
+// Função principal com menu interativo
 int main(void) {
 	setlocale(LC_ALL,"portuguese");
 	
@@ -270,7 +289,7 @@ int main(void) {
 		op = lerNumero();
 		
 		switch(op) {
-			case 1:{
+			case 1:{    // Inserir novo registro
 				Registro novoRegistro;
 				char cpfS[12];
 				
@@ -295,7 +314,7 @@ int main(void) {
 				raiz = inserir(raiz, novoRegistro);
 				break;
 			}
-			case 2:{
+			case 2:{    // Buscar registro
 				unsigned long long cpf;
 				
 				printf("Digite o CPF para buscar: ");
@@ -319,7 +338,7 @@ int main(void) {
 				}
 				break;
 			}
-			case 3:{
+			case 3:{    // Deletar registro
 				unsigned long long cpf;
 				
 				printf("Digite o CPF para deletar: ");
@@ -328,7 +347,7 @@ int main(void) {
 				raiz = remover(raiz, cpf);
 				break;
 			}
-			case 4:{
+			case 4:{    // Atualizar registro
 				unsigned long long cpf;
 				
 				printf("Digite o CPF para atualizar: ");
@@ -337,13 +356,13 @@ int main(void) {
 				update(raiz, cpf);
 				break;
 			}
-			case 5:{
+			case 5:{    // Listar registros
 				printf("Registros cadastrados:\n\n");
 				
 				read(raiz);
 				break;
 			}
-			case 6:{
+			case 6:{    // Exportar para aquivo txt
 				FILE *arquivo = fopen("registros.txt", "w");
 				
 				if(arquivo) {
@@ -355,7 +374,7 @@ int main(void) {
 				}
 				break;
 			}
-			case 0:{
+			case 0:{    // Sair da aplicação
 				printf("Saindo...\n");
 				break;
 			}
